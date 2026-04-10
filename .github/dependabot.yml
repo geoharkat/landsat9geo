@@ -1,0 +1,56 @@
+# ============================================================
+#  Dependabot — Auto dependency update PRs
+#  Place this file at: .github/dependabot.yml
+# ============================================================
+
+version: 2
+
+updates:
+
+  # ── Python dependencies (pip) ─────────────────────────────
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+      timezone: "Africa/Algiers"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "python"
+    commit-message:
+      prefix: "chore(deps)"
+    groups:
+      # Bundle all dev/test tools into one PR
+      dev-tools:
+        patterns:
+          - "pytest*"
+          - "ruff"
+          - "mypy"
+          - "hatch*"
+          - "build"
+          - "twine"
+      # Bundle all geo/science libs into one PR
+      geo-stack:
+        patterns:
+          - "rasterio"
+          - "numpy"
+          - "geopandas"
+          - "scipy"
+          - "scikit-image"
+
+  # ── GitHub Actions versions ───────────────────────────────
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+      timezone: "Africa/Algiers"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "github-actions"
+    commit-message:
+      prefix: "chore(actions)"
