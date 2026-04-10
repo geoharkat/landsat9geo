@@ -38,7 +38,7 @@ landsat9geo = "landsat9geo.cli:main"
 
 [project.urls]
 Homepage = "https://github.com/geoharkat/landsat9geo"
-Documentation = "https://github.com/geoharkat/landsat9geo#readme"
+Documentation = "https://landsat9geo.readthedocs.io/en/latest/index.html"
 Issues = "https://github.com/geoharkat/landsat9geo/issues"
 
 [tool.hatch.build.targets.wheel]
