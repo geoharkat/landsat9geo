@@ -175,8 +175,15 @@ def compute_all_ratios(bands: Dict[str, np.ndarray]) -> Dict[str, np.ndarray]:
 
     Returns a dict of name → 2-D array.
     """
-    b1, b2, b3 = bands["SR_B1"], bands["SR_B2"], bands["SR_B3"]
-    b4, b5, b6, b7 = bands["SR_B4"], bands["SR_B5"], bands["SR_B6"], bands["SR_B7"]
+    b1= bands["SR_B1"]
+    b2= bands["SR_B2"]
+    b3= bands["SR_B3"]
+    b4= bands["SR_B4"]
+    b5= bands["SR_B5"]
+    b6= bands["SR_B6"]
+    b7= bands["SR_B7"]
+
+
 
     return {
         "Iron_Oxide_R_B": iron_oxide(b4, b2),

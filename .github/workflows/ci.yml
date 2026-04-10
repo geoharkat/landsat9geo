@@ -33,7 +33,7 @@ concurrency:
 
 env:
   PYTHON_VER: "3.12"
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true" 
+   
 
 jobs:
   # ── Lint & format (fastest gate, runs alone first) ────────
