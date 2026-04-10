@@ -1,10 +1,10 @@
 [build-system]
-requires = ["hatchling"]
+requires = ["hatchling", "hatch-vcs"]
 build-backend = "hatchling.build"
 
 [project]
 name = "landsat9geo"
-version = "0.1.0"
+dynamic = ["version"]                          # ← CHANGED: removed hardcoded version
 description = "Landsat 9 L2SP geological mapping toolkit — spectral indices, MVT exploration, pansharpening, and DEM derivatives."
 readme = "README.md"
 license = "MIT"
@@ -34,6 +34,7 @@ dev = [
     "pytest>=7.0",
     "pytest-cov>=4.0",
     "ruff>=0.4",
+    "hatch-vcs",                               # ← ADD for local builds
 ]
 viz = [
     "matplotlib>=3.7",
@@ -46,6 +47,13 @@ landsat9geo = "landsat9geo.cli:main"
 Homepage = "https://github.com/geoharkat/landsat9geo"
 Documentation = "https://landsat9geo.readthedocs.io/en/latest/index.html"
 Issues = "https://github.com/geoharkat/landsat9geo/issues"
+
+[tool.hatch.version]
+source = "vcs"                                 # ← NEW: read version from git tag
+               # ← Needed if using src/ layout
+
+[tool.hatch.build.hooks.vcs]
+version-file = "src/landsat9geo/_version.py"  # ← NEW: generated at build time
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/landsat9geo"]

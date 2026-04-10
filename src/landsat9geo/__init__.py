@@ -2,7 +2,13 @@
 landsat9geo — Landsat 9 L2SP geological mapping toolkit.
 """
 
-__version__ = "0.1.0"
+# ── Dynamic version (via hatch-vcs) ──
+try:
+    from landsat9geo._version import __version__, __version_tuple__
+except ImportError:
+    # Fallback for editable installs without build
+    __version__ = "0.0.0.dev0"
+    __version_tuple__ = (0, 0, 0)
 
 # ── Public API ──
 from .processor import LandsatGeologyPipeline
@@ -27,7 +33,10 @@ from .enhancement import (
 )
 from .terrain import compute_dem_derivatives
 
+# ── Single __all__ definition ──
 __all__ = [
+    "__version__",
+    "__version_tuple__",
     "LandsatGeologyPipeline",
     "MTLParser",
     "MTLMetadata",
