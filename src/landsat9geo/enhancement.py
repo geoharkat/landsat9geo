@@ -4,7 +4,6 @@ and percentile contrast stretching.
 """
 
 import numpy as np
-from typing import Optional
 
 from .utils import safe_ratio
 
@@ -12,6 +11,7 @@ from .utils import safe_ratio
 # ═══════════════════════════════════════════════════════════════
 #  Brovey pansharpening
 # ═══════════════════════════════════════════════════════════════
+
 
 def brovey_pansharpen(sr_stack: np.ndarray, pan: np.ndarray) -> np.ndarray:
     """
@@ -45,6 +45,7 @@ def brovey_pansharpen(sr_stack: np.ndarray, pan: np.ndarray) -> np.ndarray:
 # ═══════════════════════════════════════════════════════════════
 #  Decorrelation stretch (DCS)
 # ═══════════════════════════════════════════════════════════════
+
 
 def decorrelation_stretch(
     stack: np.ndarray,
@@ -117,6 +118,7 @@ def decorrelation_stretch(
 # ═══════════════════════════════════════════════════════════════
 #  Percentile contrast stretch
 # ═══════════════════════════════════════════════════════════════
+
 
 def percentile_stretch(
     rgb: np.ndarray,

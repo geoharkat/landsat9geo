@@ -2,7 +2,6 @@
 Main orchestration: load → mask → scale → clip → pansharpen → ratios → DEM.
 """
 
-import os
 import tempfile
 import numpy as np
 import rasterio
@@ -11,12 +10,17 @@ from typing import Dict, List, Optional, Tuple, Union
 
 from .parser import MTLParser, MTLMetadata, QAMasker, DEFAULT_SR_SCALE, DEFAULT_SR_OFFSET
 from .utils import (
-    SR_BANDS, BAND_NAMES,
-    extract_tar, discover_files, ensure_same_crs,
-    clip_raster, save_tif, upsample_to_target, safe_ratio,
+    SR_BANDS,
+    BAND_NAMES,
+    extract_tar,
+    discover_files,
+    ensure_same_crs,
+    clip_raster,
+    save_tif,
+    upsample_to_target,
 )
-from .indices import compute_all_ratios, sabins_fcc, mvt_target_rgb
-from .enhancement import brovey_pansharpen, decorrelation_stretch
+from .indices import compute_all_ratios
+from .enhancement import brovey_pansharpen
 from .terrain import compute_dem_derivatives
 
 
@@ -123,9 +127,7 @@ class LandsatGeologyPipeline:
         # 7. Pansharpening
         ratio_src = sr_30m_path
         if self.pan_path is not None and self.pan_path.is_file():
-            pan_15m_path = self._pansharpen(
-                sr_30m_path, geoms, sr_meta.get("crs")
-            )
+            pan_15m_path = self._pansharpen(sr_30m_path, geoms, sr_meta.get("crs"))
             if pan_15m_path:
                 outputs["pansharpened"] = pan_15m_path
                 ratio_src = pan_15m_path
@@ -143,8 +145,11 @@ class LandsatGeologyPipeline:
             sun_az = self.metadata.sun_azimuth if self.metadata else 180.0
             sun_alt = self.metadata.sun_elevation if self.metadata else 45.0
             compute_dem_derivatives(
-                self.dem_path, target_meta, dem_out,
-                sun_azimuth=sun_az, sun_altitude=sun_alt,
+                self.dem_path,
+                target_meta,
+                dem_out,
+                sun_azimuth=sun_az,
+                sun_altitude=sun_alt,
             )
             outputs["dem"] = dem_out
 
@@ -170,7 +175,8 @@ class LandsatGeologyPipeline:
         return masker.cloud_mask(qa)
 
     def _process_sr(
-        self, cloud_mask: np.ndarray,
+        self,
+        cloud_mask: np.ndarray,
     ) -> Tuple[np.ndarray, dict]:
         arrays, meta = [], None
         scale = self.metadata.sr_scale if self.metadata else DEFAULT_SR_SCALE
@@ -193,7 +199,8 @@ class LandsatGeologyPipeline:
         return stack, meta
 
     def _process_thermal(
-        self, cloud_mask: np.ndarray,
+        self,
+        cloud_mask: np.ndarray,
     ) -> Tuple[Optional[np.ndarray], Optional[dict]]:
         path = self.files.get("ST_B10")
         if path is None:
@@ -210,7 +217,10 @@ class LandsatGeologyPipeline:
         return kelvin[np.newaxis], meta
 
     def _pansharpen(
-        self, sr_30m_path: str, geoms, raster_crs,
+        self,
+        sr_30m_path: str,
+        geoms,
+        raster_crs,
     ) -> Optional[str]:
         import geopandas as gpd
         from rasterio.mask import mask as rio_mask
@@ -224,11 +234,16 @@ class LandsatGeologyPipeline:
                 gdf_tmp = gdf_tmp.to_crs(pan_crs)
             with rasterio.open(self.pan_path) as src:
                 pan_clip, pan_t = rio_mask(
-                    src, gdf_tmp.geometry.values, crop=True, nodata=0,
+                    src,
+                    gdf_tmp.geometry.values,
+                    crop=True,
+                    nodata=0,
                 )
                 pan_meta = src.meta.copy()
             pan_meta.update(
-                height=pan_clip.shape[1], width=pan_clip.shape[2], transform=pan_t,
+                height=pan_clip.shape[1],
+                width=pan_clip.shape[2],
+                transform=pan_t,
             )
         else:
             with rasterio.open(self.pan_path) as src:
@@ -247,15 +262,15 @@ class LandsatGeologyPipeline:
         return out_path
 
     def _compute_ratios(
-        self, sr_path: str, out_path: str,
+        self,
+        sr_path: str,
+        out_path: str,
     ) -> List[str]:
         with rasterio.open(sr_path) as src:
             data = src.read().astype(np.float32)
             meta = src.meta.copy()
 
-        bands = {
-            f"SR_B{i+1}": data[i] for i in range(data.shape[0])
-        }
+        bands = {f"SR_B{i + 1}": data[i] for i in range(data.shape[0])}
         ratios = compute_all_ratios(bands)
         names = list(ratios.keys())
         stack = np.stack(list(ratios.values()), axis=0)

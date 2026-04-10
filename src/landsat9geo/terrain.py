@@ -23,10 +23,7 @@ def _pixel_size_m(meta: dict) -> Tuple[float, float]:
     dy = abs(meta["transform"].e)
     crs = meta.get("crs")
     if crs and crs.is_geographic:
-        lat_mid = (
-            meta["transform"].f
-            + meta["transform"].f + dy * meta["height"]
-        ) / 2.0
+        lat_mid = (meta["transform"].f + meta["transform"].f + dy * meta["height"]) / 2.0
         m = 111320.0 * np.cos(np.radians(lat_mid))
         return dx * m, dy * m
     return dx, dy
@@ -44,9 +41,7 @@ def coregister_dem(
     (H, W) float32 elevation array.
     """
     with rasterio.open(dem_path) as src:
-        elev = np.empty(
-            (target_meta["height"], target_meta["width"]), dtype=np.float32
-        )
+        elev = np.empty((target_meta["height"], target_meta["width"]), dtype=np.float32)
         reproject(
             source=rasterio.band(src, 1),
             destination=elev,
@@ -71,15 +66,13 @@ def slope_aspect(
     """
     p = np.pad(elev, 1, mode="edge")
     dzdx = (
-        (p[:-2, 2:] + 2 * p[1:-1, 2:] + p[2:, 2:])
-        - (p[:-2, :-2] + 2 * p[1:-1, :-2] + p[2:, :-2])
+        (p[:-2, 2:] + 2 * p[1:-1, 2:] + p[2:, 2:]) - (p[:-2, :-2] + 2 * p[1:-1, :-2] + p[2:, :-2])
     ) / (8 * dx_m)
     dzdy = (
-        (p[:-2, :-2] + 2 * p[:-2, 1:-1] + p[:-2, 2:])
-        - (p[2:, :-2] + 2 * p[2:, 1:-1] + p[2:, 2:])
+        (p[:-2, :-2] + 2 * p[:-2, 1:-1] + p[:-2, 2:]) - (p[2:, :-2] + 2 * p[2:, 1:-1] + p[2:, 2:])
     ) / (8 * dy_m)
 
-    slp = np.degrees(np.arctan(np.sqrt(dzdx ** 2 + dzdy ** 2)))
+    slp = np.degrees(np.arctan(np.sqrt(dzdx**2 + dzdy**2)))
     asp = np.degrees(np.arctan2(-dzdx, dzdy))
     asp[asp < 0] += 360.0
 

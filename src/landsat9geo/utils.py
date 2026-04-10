@@ -34,9 +34,12 @@ def safe_ratio(a: np.ndarray, b: np.ndarray, threshold: float = 1e-6) -> np.ndar
 
 # ── Tar / file discovery ──
 
-def extract_tar(tar_path: Union[str, Path],
-                dest: Optional[Union[str, Path]] = None,
-                extra_tags: Optional[List[str]] = None) -> Dict[str, str]:
+
+def extract_tar(
+    tar_path: Union[str, Path],
+    dest: Optional[Union[str, Path]] = None,
+    extra_tags: Optional[List[str]] = None,
+) -> Dict[str, str]:
     """
     Extract a Landsat .tar archive and return a dict mapping band tags
     (e.g. ``"SR_B4"``, ``"QA_PIXEL"``) to their file paths on disk.
@@ -73,8 +76,9 @@ def extract_tar(tar_path: Union[str, Path],
     return files
 
 
-def discover_files(directory: Union[str, Path],
-                   extra_tags: Optional[List[str]] = None) -> Dict[str, str]:
+def discover_files(
+    directory: Union[str, Path], extra_tags: Optional[List[str]] = None
+) -> Dict[str, str]:
     """
     Discover Landsat band files already extracted in *directory*.
     """
@@ -93,8 +97,10 @@ def discover_files(directory: Union[str, Path],
 
 # ── Clipping / reprojection ──
 
-def ensure_same_crs(vector_path: Union[str, Path],
-                    raster_path: Union[str, Path]) -> gpd.GeoDataFrame:
+
+def ensure_same_crs(
+    vector_path: Union[str, Path], raster_path: Union[str, Path]
+) -> gpd.GeoDataFrame:
     """
     Read a vector file and reproject it to the raster CRS if necessary.
     **Never** reprojects the raster.
@@ -107,9 +113,7 @@ def ensure_same_crs(vector_path: Union[str, Path],
     return gdf
 
 
-def clip_raster(stack: np.ndarray,
-                meta: dict,
-                geometries) -> Tuple[np.ndarray, dict]:
+def clip_raster(stack: np.ndarray, meta: dict, geometries) -> Tuple[np.ndarray, dict]:
     """
     Clip a raster stack to vector geometries using an in-memory VRT.
     """
@@ -133,10 +137,12 @@ def clip_raster(stack: np.ndarray,
     return clipped, out_meta
 
 
-def save_tif(array: np.ndarray,
-             meta: dict,
-             out_path: Union[str, Path],
-             band_names: Optional[List[str]] = None) -> None:
+def save_tif(
+    array: np.ndarray,
+    meta: dict,
+    out_path: Union[str, Path],
+    band_names: Optional[List[str]] = None,
+) -> None:
     """
     Write a float32 GeoTIFF with DEFLATE compression and optional band
     descriptions.
@@ -151,16 +157,13 @@ def save_tif(array: np.ndarray,
                 dst.set_band_description(i, n)
 
 
-def upsample_to_target(src_path: Union[str, Path],
-                        target_meta: dict) -> Tuple[np.ndarray, dict]:
+def upsample_to_target(src_path: Union[str, Path], target_meta: dict) -> Tuple[np.ndarray, dict]:
     """
     Reproject / resample a raster to match *target_meta* (CRS, transform, shape).
     """
     with rasterio.open(src_path) as src:
         nb = src.count
-        dst_arr = np.empty(
-            (nb, target_meta["height"], target_meta["width"]), dtype=np.float32
-        )
+        dst_arr = np.empty((nb, target_meta["height"], target_meta["width"]), dtype=np.float32)
         for i in range(1, nb + 1):
             reproject(
                 source=rasterio.band(src, i),

@@ -8,7 +8,7 @@ Band mapping (Landsat 9 OLI-2):
     B1=Coastal  B2=Blue  B3=Green  B4=Red  B5=NIR  B6=SWIR1  B7=SWIR2
 """
 
-from typing import Dict, List, Tuple
+from typing import Dict
 
 import numpy as np
 
@@ -18,6 +18,7 @@ from .utils import safe_ratio
 # ═══════════════════════════════════════════════════════════════
 #  Standard geological indices
 # ═══════════════════════════════════════════════════════════════
+
 
 def ndvi(nir: np.ndarray, red: np.ndarray) -> np.ndarray:
     """Normalized Difference Vegetation Index — used to mask vegetation cover."""
@@ -33,8 +34,7 @@ def mndwi(green: np.ndarray, swir1: np.ndarray) -> np.ndarray:
     return safe_ratio(green - swir1, green + swir1)
 
 
-def bsi(swir1: np.ndarray, red: np.ndarray,
-        nir: np.ndarray, blue: np.ndarray) -> np.ndarray:
+def bsi(swir1: np.ndarray, red: np.ndarray, nir: np.ndarray, blue: np.ndarray) -> np.ndarray:
     """Bare Soil Index — highlights exposed geological surfaces."""
     return safe_ratio(
         (swir1 + red) - (nir + blue),
@@ -77,8 +77,7 @@ def opaque_mineral(nir: np.ndarray, swir1: np.ndarray) -> np.ndarray:
     return safe_ratio(nir - swir1, nir + swir1)
 
 
-def mineral_ratio(swir1: np.ndarray, swir2: np.ndarray,
-                  nir: np.ndarray) -> np.ndarray:
+def mineral_ratio(swir1: np.ndarray, swir2: np.ndarray, nir: np.ndarray) -> np.ndarray:
     """(SWIR1/SWIR2) × (SWIR1/NIR) — combined alteration proxy."""
     return safe_ratio(swir1, swir2) * safe_ratio(swir1, nir)
 
@@ -93,8 +92,9 @@ def alunite_kaolinite(red: np.ndarray, swir1: np.ndarray) -> np.ndarray:
     return safe_ratio(red, swir1)
 
 
-def mgoh_carbonate(swir2: np.ndarray, blue: np.ndarray,
-                   swir1: np.ndarray, red: np.ndarray) -> np.ndarray:
+def mgoh_carbonate(
+    swir2: np.ndarray, blue: np.ndarray, swir1: np.ndarray, red: np.ndarray
+) -> np.ndarray:
     """(SWIR2 + Blue) / (SWIR1 + Red) — MgOH & carbonate composite."""
     return safe_ratio(swir2 + blue, swir1 + red)
 
@@ -103,8 +103,8 @@ def mgoh_carbonate(swir2: np.ndarray, blue: np.ndarray,
 #  MVT (Mississippi Valley-Type) exploration indices
 # ═══════════════════════════════════════════════════════════════
 
-def mvt_carbonate_host(nir: np.ndarray, swir1: np.ndarray,
-                       swir2: np.ndarray) -> np.ndarray:
+
+def mvt_carbonate_host(nir: np.ndarray, swir1: np.ndarray, swir2: np.ndarray) -> np.ndarray:
     """
     (NIR + SWIR1) / SWIR2 — maps limestone / dolostone host rocks
     typical of MVT Pb-Zn deposits.
@@ -125,6 +125,7 @@ def mvt_alteration_halo(swir1: np.ndarray, swir2: np.ndarray) -> np.ndarray:
 # ═══════════════════════════════════════════════════════════════
 #  Composite builders
 # ═══════════════════════════════════════════════════════════════
+
 
 def sabins_fcc(bands: Dict[str, np.ndarray]) -> np.ndarray:
     """
@@ -165,6 +166,7 @@ def geological_fcc_alt(bands: Dict[str, np.ndarray]) -> np.ndarray:
 
 
 # ── Batch computation ──
+
 
 def compute_all_ratios(bands: Dict[str, np.ndarray]) -> Dict[str, np.ndarray]:
     """

@@ -3,8 +3,6 @@ Command-line interface for landsat9geo.
 """
 
 import argparse
-import sys
-from pathlib import Path
 
 from .processor import LandsatGeologyPipeline
 
@@ -28,9 +26,13 @@ Examples
     src.add_argument("--tar", type=str, help="Path to L2SP .tar archive")
     src.add_argument("--dir", type=str, help="Path to extracted L2SP directory")
     parser.add_argument("--shp", type=str, default=None, help="Shapefile / GeoPackage for AOI clip")
-    parser.add_argument("--pan", type=str, default=None, help="Panchromatic band (15 m) for Brovey pansharpening")
+    parser.add_argument(
+        "--pan", type=str, default=None, help="Panchromatic band (15 m) for Brovey pansharpening"
+    )
     parser.add_argument("--dem", type=str, default=None, help="DEM for slope/aspect/hillshade")
-    parser.add_argument("-o", "--output", type=str, default="geology_output", help="Output directory")
+    parser.add_argument(
+        "-o", "--output", type=str, default="geology_output", help="Output directory"
+    )
 
     args = parser.parse_args()
 
