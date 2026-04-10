@@ -25,6 +25,7 @@ env:
   OWNER:        "geoharkat"
   TAP_NAME:     "homebrew-tap"
   PYTHON_VER:   "3.12"
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true" 
 
 jobs:
   # ═══════════════════════════════════════════════════════════
