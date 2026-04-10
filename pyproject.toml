@@ -1,0 +1,49 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "landsat9geo"
+version = "0.1.0"
+description = "Landsat 9 L2SP geological mapping toolkit — spectral indices, MVT exploration, pansharpening, and DEM derivatives."
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.9"
+authors = [
+    { name = "Ismail Harkat", email = "geoharkat@gmail.com" },
+]
+keywords = [
+    "landsat", "remote-sensing", "geology", "lithology",
+    "spectral-indices", "geospatial", "MVT", "pansharpening",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering :: GIS",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+]
+dependencies = [
+    "numpy>=1.22",
+    "rasterio>=1.3",
+    "geopandas>=0.12",
+]
+
+[project.optional-dependencies]
+viz = ["matplotlib>=3.5"]
+dev = ["pytest>=7", "ruff"]
+
+[project.scripts]
+landsat9geo = "landsat9geo.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/geoharkat/landsat9geo"
+Documentation = "https://github.com/geoharkat/landsat9geo#readme"
+Issues = "https://github.com/geoharkat/landsat9geo/issues"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/landsat9geo"]
+
+[tool.ruff]
+target-version = "py39"
+line-length = 100
