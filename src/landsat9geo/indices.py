@@ -175,7 +175,6 @@ def compute_all_ratios(bands: Dict[str, np.ndarray]) -> Dict[str, np.ndarray]:
 
     Returns a dict of name → 2-D array.
     """
-    b1= bands["SR_B1"]
     b2= bands["SR_B2"]
     b3= bands["SR_B3"]
     b4= bands["SR_B4"]
