@@ -134,7 +134,7 @@ class LandsatGeologyPipeline:
 
         # 8. Geological ratios
         ratio_path = str(self.output_dir / "geological_ratios.tif")
-        ratio_names = self._compute_ratios(ratio_src, ratio_path)
+        _ratio_names = self._compute_ratios(ratio_src, ratio_path)
         outputs["ratios"] = ratio_path
 
         # 9. DEM derivatives
