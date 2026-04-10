@@ -9,15 +9,20 @@ name: ci
 on:
   push:
     branches: ["main", "dev"]
-    paths-ignore:          # skip docs-only changes
+    paths-ignore:
       - "**.md"
       - "docs/**"
       - ".github/ISSUE_TEMPLATE/**"
+      - "LICENSE"           
+      - ".pre-commit-config.yaml"  
   pull_request:
     branches: ["main"]
     paths-ignore:
       - "**.md"
       - "docs/**"
+      - ".github/ISSUE_TEMPLATE/**"
+      - "LICENSE"           
+      - ".pre-commit-config.yaml"  
 
 permissions:
   contents: read
@@ -36,9 +41,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v4
 
-      - uses: actions/setup-python@v6
+      - uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VER }}
           cache: "pip"
@@ -63,9 +68,9 @@ jobs:
         python-version: ["3.10", "3.11", "3.12"]
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v4
 
-      - uses: actions/setup-python@v6
+      - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
           cache: "pip"
@@ -104,9 +109,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v4
 
-      - uses: actions/setup-python@v6
+      - uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VER }}
           cache: "pip"

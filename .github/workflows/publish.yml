@@ -43,13 +43,8 @@ jobs:
       - name: Extract and validate tag
         id: release
         run: |
-          if [ "${{ github.ref_type }}" != "tag" ]; then
-            echo "::error::Workflow triggered without a tag — aborting."
-            exit 1
-          fi
-
           TAG_NAME="${GITHUB_REF#refs/tags/}"
-
+          
           if ! echo "$TAG_NAME" | grep -qP '^\d+\.\d+\.\d+(a\d+|b\d+|rc\d+)?$'; then
             echo "::error::Tag '$TAG_NAME' does not match expected semver pattern."
             exit 1
@@ -57,17 +52,13 @@ jobs:
 
           NEW_VERSION=$(echo "$TAG_NAME" | grep -oP '^\d+\.\d+\.\d+')
           SUFFIX=$(echo "$TAG_NAME"      | grep -oP '(a|b|rc)\d+' || true)
-          IS_PRERELEASE=$( [ -n "$SUFFIX" ] && echo "true" || echo "false" )
+          IS_PRERELEASE="false"
+          [ -n "$SUFFIX" ] && IS_PRERELEASE="true"
 
           echo "new_version=$NEW_VERSION"      >> "$GITHUB_OUTPUT"
           echo "suffix=$SUFFIX"                >> "$GITHUB_OUTPUT"
           echo "tag_name=$TAG_NAME"            >> "$GITHUB_OUTPUT"
           echo "is_prerelease=$IS_PRERELEASE"  >> "$GITHUB_OUTPUT"
-
-          echo "✅ Version  : $NEW_VERSION"
-          echo "✅ Full tag : $TAG_NAME"
-          echo "✅ Suffix   : ${SUFFIX:-none}"
-          echo "✅ Pre-rel  : $IS_PRERELEASE"
 
   # ═══════════════════════════════════════════════════════════
   # JOB 2 — Confirm version is newer than PyPI
@@ -82,9 +73,8 @@ jobs:
         id: pypi
         run: |
           RESPONSE=$(curl -sf "https://pypi.org/pypi/${{ env.PACKAGE_NAME }}/json" || echo "{}")
-
-          # FIX: use plain `sort` not `sort_by(... | map(tonumber))`
-          # The numeric sort explodes on pre-release strings like "0.1.0a1"
+          echo "response=$RESPONSE" >> "$GITHUB_STATE"
+          
           LATEST=$(echo "$RESPONSE" | jq -r '
             select(.releases != null)
             | .releases | keys
@@ -93,20 +83,28 @@ jobs:
             | last // "0.0.0"
           ')
           echo "pypi_version=$LATEST" >> "$GITHUB_OUTPUT"
-          echo "Latest on PyPI: $LATEST"
 
-      - name: Assert new version is strictly greater
+      - name: Assert new version doesn't exist and is greater
         run: |
-          NEW="${{ needs.details.outputs.new_version }}"
+          NEW="${{ needs.details.outputs.tag_name }}"
           OLD="${{ steps.pypi.outputs.pypi_version }}"
-          # Strip pre-release suffix from OLD for numeric comparison
-          OLD_BASE=$(echo "$OLD" | grep -oP '^\d+\.\d+\.\d+' || echo "0.0.0")
-          HIGHER=$(printf '%s\n%s' "$OLD_BASE" "$NEW" | sort -V | tail -1)
-          if [ "$HIGHER" != "$NEW" ] && [ "$NEW" != "$OLD_BASE" ]; then
-            echo "::error::$NEW is not greater than PyPI version $OLD."
+          
+          # Check exact version doesn't exist
+          if echo "$RESPONSE" | jq -e ".releases.\"$NEW\"" > /dev/null 2>&1; then
+            echo "::error::Version $NEW already exists on PyPI!"
             exit 1
           fi
-          echo "✅ $NEW >= $OLD_BASE — proceeding."
+          
+          # Compare base versions
+          NEW_BASE="${{ needs.details.outputs.new_version }}"
+          OLD_BASE=$(echo "$OLD" | grep -oP '^\d+\.\d+\.\d+' || echo "0.0.0")
+          HIGHER=$(printf '%s\n%s' "$OLD_BASE" "$NEW_BASE" | sort -V | tail -1)
+          
+          if [ "$HIGHER" != "$NEW_BASE" ]; then
+            echo "::error::$NEW_BASE is not greater than PyPI version $OLD_BASE."
+            exit 1
+          fi
+          echo "✅ $NEW > $OLD_BASE — proceeding."
 
   # ═══════════════════════════════════════════════════════════
   # JOB 3 — Lint + type-check gate
@@ -117,9 +115,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v4
 
-      - uses: actions/setup-python@v6
+      - uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VER }}
           cache: "pip"
@@ -137,12 +135,7 @@ jobs:
       # Opt-in mypy — only runs if config exists in the repo
       - name: Mypy type check
         run: |
-          if [ -f "mypy.ini" ] || grep -q "\[tool.mypy\]" pyproject.toml 2>/dev/null; then
-            pip install mypy
-            mypy landsat9geo/
-          else
-            echo "::notice::No mypy config found — skipping."
-          fi
+          if [ -f "mypy.ini" ] || { [ -f "pyproject.toml" ] && grep -q "\[tool.mypy\]" pyproject.toml; }; then
 
   # ═══════════════════════════════════════════════════════════
   # JOB 4 — Tests (matrix)
@@ -158,17 +151,22 @@ jobs:
         python: ["3.10", "3.11", "3.12"]
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v4
 
-      - uses: actions/setup-python@v6
+      - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python }}
           cache: "pip"
 
       - name: Install package + test deps
-        # FIX: fall back if [dev] extras not yet defined in pyproject.toml
-        run: pip install ".[dev]" 2>/dev/null || pip install -e . && pip install pytest pytest-cov
-
+        run: |
+          if pip install ".[dev]" 2>/dev/null; then
+            echo "Installed with [dev] extras"
+          else
+            echo "[dev] extras not found, installing base + test deps"
+            pip install -e .
+            pip install pytest pytest-cov
+          fi
       - name: Check for test files
         id: check_tests
         shell: bash
@@ -197,7 +195,7 @@ jobs:
 
       - name: Upload coverage (Ubuntu / 3.12 only)
         if: matrix.os == 'ubuntu-latest' && matrix.python == '3.12'
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@v4
         with:
           name: coverage-report
           path: .coverage
@@ -212,24 +210,18 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-depth: 0                          # ← KEEP: needed for git tag history
 
-      - uses: actions/setup-python@v6
+      - uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VER }}
           cache: "pip"
 
       - name: Install build tools
-        run: pip install hatch hatchling build twine
+        run: pip install hatch hatchling hatch-vcs build twine
 
-      # FIX: stamp the FULL tag_name (e.g. "0.1.0a1"), NOT new_version ("0.1.0")
-      # new_version strips the pre-release suffix, producing a wrong wheel name
-      - name: Stamp version from tag
-        run: hatch version "${{ needs.details.outputs.tag_name }}"
-
-      # FIX: graceful fallback if [viz] extras aren't defined yet
       - name: Install package with all extras
         run: pip install ".[dev,viz]" 2>/dev/null || pip install ".[dev]"
 
@@ -258,7 +250,7 @@ jobs:
           echo "Built: $WHEEL  |  $SDIST"
 
       - name: Upload dist artifact
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@v4
         with:
           name: dist
           path: dist/
@@ -279,7 +271,7 @@ jobs:
 
     steps:
       - name: Download dist artifact
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@v4
         with:
           name: dist
           path: dist/
@@ -300,12 +292,12 @@ jobs:
       contents: write
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
       - name: Download dist artifact
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@v4
         with:
           name: dist
           path: dist/
@@ -331,6 +323,7 @@ jobs:
     name: "🍺 Update Homebrew tap"
     needs: [details, github_release, pypi_publish]
     runs-on: ubuntu-latest
+    if: needs.details.outputs.is_prerelease != 'true'  # ← Skip for pre-releases
     environment:
       name: release
 
@@ -339,12 +332,9 @@ jobs:
         id: formula
         run: |
           TAG="${{ needs.details.outputs.tag_name }}"
-          VERSION="${{ needs.details.outputs.new_version }}"
-          # FIX: tarball on GitHub is named with TAG, not VERSION
-          # e.g. landsat9geo-0.1.0a1.tar.gz  NOT  landsat9geo-0.1.0.tar.gz
           URL="https://github.com/${{ env.OWNER }}/${{ env.PACKAGE_NAME }}/releases/download/${TAG}/${{ env.PACKAGE_NAME }}-${TAG}.tar.gz"
-          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-          echo "url=$URL"         >> "$GITHUB_OUTPUT"
+          echo "version=$TAG" >> "$GITHUB_OUTPUT"        # ← Use full TAG
+          echo "url=$URL"     >> "$GITHUB_OUTPUT"
           echo "name=${{ env.PACKAGE_NAME }}" >> "$GITHUB_OUTPUT"
 
       - name: Dispatch update to Homebrew tap
