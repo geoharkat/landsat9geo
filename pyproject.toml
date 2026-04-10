@@ -8,7 +8,7 @@ dynamic = ["version"]                          # ← CHANGED: removed hardcoded 
 description = "Landsat 9 L2SP geological mapping toolkit — spectral indices, MVT exploration, pansharpening, and DEM derivatives."
 readme = "README.md"
 license = "MIT"
-requires-python = ">=3.9"
+requires-python = ">=3.11"
 authors = [
     { name = "Ismail Harkat", email = "geoharkat@gmail.com" },
 ]
