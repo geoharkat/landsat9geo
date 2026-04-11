@@ -136,7 +136,11 @@ jobs:
       - name: Mypy type check
         run: |
           if [ -f "mypy.ini" ] || { [ -f "pyproject.toml" ] && grep -q "\[tool.mypy\]" pyproject.toml; }; then
-
+            pip install mypy
+            mypy landsat9geo/ --ignore-missing-imports
+          else
+            echo "::notice::No mypy config found — skipping."
+          fi
   # ═══════════════════════════════════════════════════════════
   # JOB 4 — Tests (matrix)
   # ═══════════════════════════════════════════════════════════
