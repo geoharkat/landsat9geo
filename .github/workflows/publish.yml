@@ -147,7 +147,7 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        os:     [ubuntu-latest, windows-latest]
+        os:     [ubuntu-latest]
         python: [ "3.11", "3.12"]
 
     steps:
@@ -263,9 +263,9 @@ jobs:
     name: "🚀 Publish → PyPI"
     needs: [build, details]
     runs-on: ubuntu-latest
-    environment:
-      name: release
-      url: "https://pypi.org/project/${{ env.PACKAGE_NAME }}/${{ needs.details.outputs.tag_name }}/"
+    #environment:
+      #name: release
+      #url: "https://pypi.org/project/${{ env.PACKAGE_NAME }}/${{ needs.details.outputs.tag_name }}/"
     permissions:
       id-token: write
 
@@ -323,7 +323,7 @@ jobs:
     name: "🍺 Update Homebrew tap"
     needs: [details, github_release, pypi_publish]
     runs-on: ubuntu-latest
-    if: needs.details.outputs.is_prerelease != 'true'  # ← Skip for pre-releases
+    if: false 
     environment:
       name: release
 
